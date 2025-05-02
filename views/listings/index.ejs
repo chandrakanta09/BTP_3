@@ -1,0 +1,209 @@
+<% layout("/layouts/boilerplate") %>
+
+<body>
+    <style>
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            text-align: center;
+            margin: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-img-top {
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .listing-link {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .card-body {
+            padding: 10px;
+        }
+
+        .card-title {
+            font-weight: bold;
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .card-details {
+            font-size: 0.85rem;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .card-price {
+            font-size: 1.1rem;
+            color: #f26522;
+            font-weight: bold;
+        }
+
+        .view-button {
+            background-color: #ff6600;
+            color: white;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            font-weight: bold;
+            border-top: 1px solid #ddd;
+            cursor: pointer;
+        }
+
+        .filter-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .filter-form input,
+        .filter-form select,
+        .filter-form button {
+            flex: 1 1 150px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .filter-form label {
+            flex-basis: 100%;
+            font-size: 0.9rem;
+            margin-bottom: 0;
+            margin-top: 5px;
+        }
+
+        #priceValue {
+            font-weight: bold;
+        }
+
+        .row-cols-lg-3 {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: start;
+        }
+
+        .col {
+            flex: 1 0 30%;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 768px) {
+            .col {
+                flex: 1 0 100%;
+            }
+
+            .filter-form {
+                flex-direction: column;
+            }
+        }
+        .scroll-banner {
+            width: 100%;
+            overflow: hidden;
+            background-color: #ff6600;
+            padding: 10px 0;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .scroll-text {
+            display: inline-block;
+            white-space: nowrap;
+            padding-left: 100%;
+            animation: scrollText 15s linear infinite;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        @keyframes scrollText {
+            0% {
+                transform: translateX(0%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+    </style>
+    <!-- Scrolling Message -->
+    <div class="scroll-banner">
+        <div class="scroll-text">BookBus: Brings your loved ones and dreams closer</div>
+    </div>
+
+    <!-- Filter Form -->
+    <form action="/listings/filter" method="GET" class="filter-form">
+        <input type="text" name="source" placeholder="Source" required>
+        <input type="text" name="destination" placeholder="Destination" required>
+        <input type="text" name="date" placeholder="Date (DD-MM-YYYY)" required>
+
+        <select name="departureTimeRange">
+            <option value="">Starting Time</option>
+            <option value="06:00-11:59">06:00-11:59</option>
+            <option value="12:00-17:59">12:00-17:59</option>
+            <option value="18:00-23:59">18:00-23:59</option>
+            <option value="00:00-05:59">00:00-05:59</option>
+        </select>
+
+        <select name="arrivalTimeRange">
+            <option value="">Ending Time</option>
+            <option value="06:00-11:59">06:00-11:59</option>
+            <option value="12:00-17:59">12:00-17:59</option>
+            <option value="18:00-23:59">18:00-23:59</option>
+            <option value="00:00-05:59">00:00-05:59</option>
+        </select>
+
+        <label for="priceRange">Max Price: ₹<span id="priceValue">100</span></label>
+        <input type="range" id="priceRange" name="price" min="100" max="5000" step="50" value="100" oninput="updatePriceValue(this.value)">
+
+        <select name="busType">
+            <option value="">Bus Type</option>
+            <option value="AC">AC</option>
+            <option value="Sleeper">Sleeper</option>
+            <option value="Seater">Seater</option>
+            <option value="Non AC">Non AC</option>
+        </select>
+
+        <button type="submit">Filter</button>
+    </form>
+
+    <script>
+        function updatePriceValue(value) {
+            document.getElementById('priceValue').textContent = value;
+        }
+    </script>
+
+    <!-- Listing Cards -->
+    <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
+        <% for (let listing of allListings) { %>
+            <div class="col mb-4">
+                <div class="card">
+                    <img src="<%= listing.image.url %>" class="card-img-top" alt="listing_image">
+                    <div class="card-body">
+                        <div class="card-title"><%= listing.title %></div>
+                        <div class="card-details"><%= listing.busType %></div>
+                        <div class="card-details"><%= listing.arrivalTime %> - <%= listing.departureTime %></div>
+                        <div class="card-price">&#8377;<%= listing.price.toLocaleString("en-IN") %></div>
+                    </div>
+                    <a href="/listings/<%= listing._id %>">
+                        <div class="view-button">View Details</div>
+                    </a>
+                </div>
+            </div>
+        <% } %>
+    </div>
+</body>

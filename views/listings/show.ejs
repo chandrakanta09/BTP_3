@@ -1,0 +1,235 @@
+<% layout("/layouts/boilerplate") %>
+
+<style>
+    .container-split {
+        display: flex;
+        flex-wrap: wrap;
+        height: auto;
+        margin-top: 1rem;
+    }
+
+    .left-half, .right-half {
+        flex: 1 1 50%;
+        padding: 1rem;
+        overflow-y: auto;
+    }
+
+    .left-half {
+        background-color: #FF6A00; /* Light orange */
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    .seats {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .seat-column {
+        display: flex;
+        flex-direction: column;
+        margin: 0 0.5rem;
+    }
+
+    .seat-row {
+        display: flex;
+        justify-content: center;
+        margin: 0.3rem 0;
+    }
+
+    .seat {
+        width: 40px;
+        height: 40px;
+        background-color: grey;
+        margin: 0.2rem;
+        border-radius: 5px;
+        cursor: pointer;
+        color: white;
+        font-size: 12px;
+        text-align: center;
+        line-height: 40px;
+        transition: background-color 0.3s;
+    }
+
+    .seat.selected {
+        background-color: green;
+    }
+
+    .seat.occupied {
+        background-color: red;
+        cursor: not-allowed;
+    }
+
+    .right-half {
+        background-color: #ffffff; /* Light orange */
+    }
+
+    .bus-details {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .bus-details h3 {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    .bus-details p {
+        font-size: 16px;
+        margin: 2px 0;
+        color: #555;
+    }
+
+    .passenger-card {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 1rem;
+        background-color: #f9f9f9;
+    }
+    .passenger-card h5 {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .payment-details input {
+        margin-bottom: 1rem;
+    }
+    .payment-total {
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    .btn-book {
+        display: block;
+        margin: 1rem auto;
+    }
+
+    @media (max-width: 768px) {
+        .container-split {
+            flex-direction: column;
+        }
+
+        .left-half, .right-half {
+            flex: 1 1 100%;
+        }
+    }
+</style>
+
+<div class="container-split">
+    <!-- LEFT HALF -->
+    <div class="left-half">
+        <div class="seats">
+            <% const seatLabels = ['A', 'B', 'C', 'D', 'E', 'F']; %>
+            <div class="seat-column">
+                <% for(let i=0; i<6; i++) { %>
+                    <div class="seat-row">
+                        <% for(let j=0; j<2; j++) { %>
+                            <% let seatNum = seatLabels[i] + (j+1); %>
+                            <div class="seat" data-seat-number="<%= seatNum %>"><%= seatNum %></div>
+                        <% } %>
+                    </div>
+                <% } %>
+            </div>
+            <div class="seat-column">
+                <% for(let i=0; i<6; i++) { %>
+                    <div class="seat-row">
+                        <% for(let j=2; j<5; j++) { %>
+                            <% let seatNum = seatLabels[i] + (j+1); %>
+                            <div class="seat" data-seat-number="<%= seatNum %>"><%= seatNum %></div>
+                        <% } %>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT HALF -->
+    <div class="right-half">
+        <div class="bus-details">
+            <h3><%= listing.title %></h3>
+            <p><%= listing.busType %></p>
+            <p><%= listing.departureTime %> - <%= listing.arrivalTime %></p>
+            <p>₹<%= listing.price.toLocaleString("en-IN") %> per seat</p>
+        </div>
+
+        <form id="bookingForm" method="POST" action="/book">
+            <div id="passenger-forms" class="passenger-details"></div>
+
+            <div class="payment-details">
+                <h5>Payment Details</h5>
+                <div class="payment-total" id="totalPrice">Total: ₹0</div>
+                <input type="text" name="cardName" class="form-control" placeholder="Card Holder Name" required>
+                <input type="text" name="cardNumber" class="form-control" placeholder="Card Number" required>
+                <input type="text" name="cvv" class="form-control" placeholder="CVV" required>
+                <input type="text" name="expiry" class="form-control" placeholder="Expiry Date (MM/YY)" required>
+
+                <button type="submit" class="btn btn-success btn-book">Book</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const seats = document.querySelectorAll('.seat');
+    const passengerFormsContainer = document.getElementById('passenger-forms');
+    const totalPriceDisplay = document.getElementById('totalPrice');
+    const pricePerSeat = <%= listing.price %>;
+    const MAX_SEATS_AVAILABLE = 30;
+
+    let selectedSeats = [];
+
+    seats.forEach(seat => {
+        seat.addEventListener('click', () => {
+            const seatNumber = seat.dataset.seatNumber;
+            if (seat.classList.contains('occupied')) return;
+
+            if (seat.classList.contains('selected')) {
+                seat.classList.remove('selected');
+                selectedSeats = selectedSeats.filter(s => s !== seatNumber);
+            } else {
+                if (selectedSeats.length >= MAX_SEATS_AVAILABLE) return;
+                seat.classList.add('selected');
+                selectedSeats.push(seatNumber);
+            }
+            updatePassengerForms();
+        });
+    });
+
+    function updatePassengerForms() {
+        passengerFormsContainer.innerHTML = '';
+        selectedSeats.forEach((seatNumber, index) => {
+            passengerFormsContainer.innerHTML += `
+                <div class="passenger-card">
+                    <h5>Passenger ${index + 1} (Seat ${seatNumber})</h5>
+                    <div class="mb-3">
+                        <input type="hidden" name="passengers[${index}][seat]" value="${seatNumber}">
+                        <input type="text" name="passengers[${index}][name]" class="form-control" placeholder="Name" required>
+                    </div>
+                    <div class="mb-3">
+                        <input type="number" name="passengers[${index}][age]" class="form-control" placeholder="Age" required>
+                    </div>
+                    <div class="mb-3">
+                        <select name="passengers[${index}][gender]" class="form-control" required>
+                            <option value="">Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+        });
+        totalPriceDisplay.innerText = `Total: ₹${pricePerSeat * selectedSeats.length}`;
+    }
+
+    document.getElementById('bookingForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        alert(`Booking confirmed for ${selectedSeats.length} seat(s)!`);
+        window.location.href = '/listings';
+    });
+</script>

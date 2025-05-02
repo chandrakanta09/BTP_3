@@ -1,0 +1,64 @@
+<style>
+  .search-btn{
+    background-color:#fe424d;
+    color:#fff;
+    border-radius:25px;
+    padding:0 1rem 0 1rem;
+  }
+  .search-btn:hover{
+    background-color:#fe424d;
+    color:#fff;
+  }
+  .search-btn i{
+    display:inline;
+    margin-right:0.5rem;
+  }
+  .search-inp{
+    border-radius:25px;
+    padding:0.5rem 3rem 0.5rem 1rem;
+    font-size:0.9rem;
+  }
+  .bookbus-btn {
+  padding: 0.3rem 1.2rem;
+  font-weight: bold;
+  border-radius: 25px;
+  background: white;
+  border: 2px solid transparent;
+  background-image: linear-gradient(white, white),
+                    linear-gradient(to right, #00c6ff, #0072ff, #00c6ff); /* Rainbow-like border */
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  color: #2c3e50;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  }
+
+  .bookbus-btn:hover {
+    color: #0072ff;
+    background-image: linear-gradient(white, white),
+                      linear-gradient(to right, #ff6a00, #ee0979, #ff6a00);
+  }
+</style>
+<nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/listings"><i class="fa-solid fa-compass"></i></a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+        <div class="navbar-nav">
+          <a class="nav-link bookbus-btn" href="/listings">BookBus</a>
+        </div>
+        <div class="navbar-nav ms-auto">
+
+          <%if(!currUser){%>
+            <a class="nav-link" href="/signup"><b>Sign up</b></a>
+            <a class="nav-link" href="/login"><b>Log in</b></a>
+          <%}%>
+          <%if(currUser){%>
+          <a class="nav-link" href="/logout"><b>Log out</b></a>
+          <%}%>
+        </div>
+      </div>
+    </div>
+  </nav>
